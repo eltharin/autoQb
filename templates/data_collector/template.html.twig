@@ -1,0 +1,130 @@
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        #collector-content summary {
+            display:list-item;
+            background-color: var(--table-header);
+        }
+
+        #collector-content details > div{
+            padding-left : 30px;
+            padding-top : 10px;
+
+        }
+
+        #collector-content details.entityData {
+            border: 1px solid var(--table-border-color);
+        }
+
+        #collector-content details.entityData > summary > span.linked {
+            vertical-align: top;
+        }
+
+        #collector-content details.entityData > summary > span.info {
+
+        }
+
+        #collector-content details.element {
+            padding-top : 10px;
+        }
+
+        #collector-content details.entityData > div > .query {
+            padding-top : 10px;
+        }
+
+        #collector-content details.entityData > summary {
+            background-color: var(--table-header);
+            font-weight: bold;
+            text-align: left;
+            padding: 8px 10px;
+            line-height: 1.5;
+        }
+
+
+    </style>
+{% endblock %}
+
+{% block toolbar %}
+    {% set icon %}
+        {{ source('@EltharinAutoQb/Icons/menu.svg') }}
+        <span class="sf-toolbar-value sf-toolbar-ajax-request-counter">{{ collector.data | length }}</span>
+    {% endset %}
+
+    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig') }}
+{% endblock %}
+
+{% block menu %}
+    <span class="label ">
+        <span class="icon">{{ source('@EltharinAutoQb/Icons/menu.svg') }}</span>
+        <strong>AutoQb</strong>
+    </span>
+{% endblock %}
+
+{% block panel %}
+    <h2>AutoQb Queries List</h2>
+    {% for query in collector.data %}
+        {{ _self.print_entityData(query.log, true,query.query) }}
+    {% endfor %}
+    {{ dump(collector) }}
+{% endblock panel %}
+
+{% macro print_entityData(entityData, isRoot, foot = '') %}
+    <details class="entityData">
+    <summary>
+        {% if not isRoot %}
+            <span class="linked">{{ source('@WebProfiler/Icon/' ~ (entityData.result ? 'yes' : 'no') ~ '.svg') }}</span>
+        {% endif %}
+        <span class="info">{% if entityData.property is defined %}{{ entityData.property }} - {% endif %}{{ entityData.alias }} - {{ entityData.entityName }}</span>
+    </summary>
+    <div>
+
+        {% if not isRoot %}
+            <details open class="element">
+                <summary>Attributs</summary>
+                <div>
+                    {% if entityData.attributes is defined and entityData.attributes is not empty %}
+                        {% for key, attribute in entityData.attributes %}
+                            <details class="entityData">
+                                <summary><span class="linked">{{ source('@WebProfiler/Icon/' ~ (attribute.result ? 'yes' : 'no') ~ '.svg') }}</span>{{ attribute.reason }}</summary>
+                                <div>
+                                    {% if attribute.attr is defined %}
+                                        <p>WhenAlias : {{ attribute.attr.whenAlias | join(',') }}</p>
+                                        <p>relationAlias : {{ attribute.attr.relationAlias }}</p>
+                                        <p>indexBy : {{ attribute.attr.indexBy }}</p>
+                                        <p>indexByWithoutAlias : {{ attribute.attr.indexByWithoutAlias ? '1' : '0' }}</p>
+                                        <p>conditionType : {{ attribute.attr.conditionType }}</p>
+                                        <p>condition : {{ attribute.attr.condition }}</p>
+                                        <p>autoLink : {{ attribute.attr.autoLink ? '1' : '0' }}</p>
+                                        <p>select : {{ attribute.attr.select ? '1' : '0' }}</p>
+                                        <p>joinType : {{ attribute.attr.joinType }}</p>
+                                        <p>callback : {{ attribute.attr.callback }}</p>
+                                    {% endif %}
+                                </div>
+                            </details>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </details>
+
+        {% endif %}
+        {% if entityData.relations is defined and entityData.relations is not empty %}
+            <details open open class="element">
+                <summary>Sub relations</summary>
+                <div>
+                    {% for subEntity in entityData.relations %}
+                        {{ _self.print_entityData(subEntity, false) }}
+                    {% endfor %}
+                </div>
+            </details>
+        {% endif %}
+
+
+        {% if foot != '' %}
+            <div class="query">{{ foot }}</div>
+        {% endif %}
+    </div>
+    </details>
+
+{%endmacro %}

@@ -1,0 +1,21 @@
+{
+    "name": "eltharin/autoqb",
+    "autoload": {
+        "psr-4": {
+            "Eltharin\\AutoQbBundle\\": "src/",
+            "EltharinAutoQBTests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.4.0",
+        "doctrine/orm": "^3.0",
+        "doctrine/dbal": "^4",
+        "doctrine/doctrine-bundle": "^2.7"
+    },
+	"description": "automaticquerybuilder Bundle for symfony",
+    "keywords": ["Symfony", "PHP", "Web", "Bundle"],
+    "license": "GPL-3.0",
+	"type": "symfony-bundle",
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
