@@ -160,7 +160,7 @@ in ClassTest2 we add a AutoQbField attribute on ClassTest3 relation, add autolin
 ```php
     $dql = $class1Repository->getDQL((new DqlOptions)->with('classtest1__classtest2'));
 ```
-will be : 
+will render DQL : 
 ```sql
     SELECT classtest1, classtest1__classtest2
     FROM EltharinAutoQBTests\Entity\ClassTest1 classtest1
@@ -170,7 +170,7 @@ and
 ```php
     $dql = $class2Repository->getDQL();
 ```
-will be :
+will render DQL :
 ```sql
     SELECT classtest2, classtest2__classtest3
     FROM EltharinAutoQBTests\Entity\ClassTest2 classtest2
@@ -196,7 +196,7 @@ now :
 ```php
     $dql = $class1Repository->getDQL((new DqlOptions)->with('classtest1__classtest2'));
 ```
-will be :
+will render DQL :
 ```sql
     SELECT classtest1, classtest1__classtest2 
     FROM EltharinAutoQBTests\Entity\ClassTest1 classtest1
@@ -209,7 +209,7 @@ and if we query the alias :
 ```php
     $dql = $class1Repository->getDQL((new DqlOptions)->with('classtest1__classtest2All'));
 ```
-will be :
+will render DQL :
 ```sql
     SELECT classtest1, classtest1__classtest2All 
     FROM EltharinAutoQBTests\Entity\ClassTest1 classtest1
@@ -224,7 +224,7 @@ you can also ask indexBy relation :
     #[AutoQbField(indexBy: 'idForIndexBy')]
     private ?ClassTest3 $classtest3 = null;
 ```
-will be :
+will render DQL :
 ```sql
     SELECT mySuperAlias8, mySuperAlias8__classtest3 
     FROM EltharinAutoQBTests\Entity\ClassTest8 mySuperAlias8 
