@@ -52,7 +52,12 @@ class QueryBuilderMaker
                     $indexBy);
                 $from[] = $relAlias;
 
-                $this->addJoins($subAlias, $assoc['targetEntity'], $from, $count+1, $with[$relAlias], $logAssoc);
+                try{
+                    $this->addJoins($subAlias, $assoc['targetEntity'], $from, $count+1, $with[$relAlias]??[], $logAssoc);
+                } catch(UnknownRelation $e) {
+                    $log['error'][] = $e->getMessage();
+                }
+
                 $logAssoc['alias'] = $subAlias;
                 $logAssoc['attribute'] = $propertyAttribute;
                 $logAssoc['result'] = true;
@@ -66,9 +71,10 @@ class QueryBuilderMaker
             }
             $log['relations'][] = $logAssoc;
         }
+
         if(!empty($with))
         {
-            throw new UnknownRelation(implode(', ', array_keys($with)) . ' not exists.');
+            throw new UnknownRelation(implode(', ', array_map(fn($a) => $alias . '.' . $a, array_keys($with))) . ' not exists.');
         }
 
     }

@@ -109,6 +109,15 @@
             </details>
 
         {% endif %}
+
+        {% if entityData.error is defined %}
+            <div class="error">
+                {% for error in entityData.error %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         {% if entityData.relations is defined and entityData.relations is not empty %}
             <details open open class="element">
                 <summary>Sub relations</summary>

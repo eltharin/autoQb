@@ -4,6 +4,7 @@ namespace Eltharin\AutoQbBundle\Repository;
 
 use Doctrine\ORM\QueryBuilder;
 use Eltharin\AutoQbBundle\DataCollector\AutoQbCollector;
+use Eltharin\AutoQbBundle\Exception\UnknownRelation;
 use Eltharin\AutoQbBundle\Objects\DqlOptions;
 use Eltharin\AutoQbBundle\Service\QueryBuilderMaker;
 
@@ -23,10 +24,13 @@ trait AutoQbRepository
 
         $log = [];
 
-        (new QueryBuilderMaker($qb, $this->getEntityManager(), $options->getSeparator()))
-            ->addJoins($this->autoQbAlias, $this->getEntityName(), with: $options->getWith()[$this->autoQbAlias] ?? [], log: $log);
-
-        AutoQbCollector::addData($log, $qb);
+        try{
+            (new QueryBuilderMaker($qb, $this->getEntityManager(), $options->getSeparator()))
+                ->addJoins($this->autoQbAlias, $this->getEntityName(), with: $options->getWith()[$this->autoQbAlias] ?? [], log: $log);
+        } catch(UnknownRelation $e) {
+            $log['error'][] = $e->getMessage();
+        }
+            AutoQbCollector::addData($log, $qb);
 
 		return $qb;
 	}
