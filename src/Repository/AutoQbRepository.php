@@ -26,7 +26,7 @@ trait AutoQbRepository
 
         try{
             (new QueryBuilderMaker($qb, $this->getEntityManager(), $options->getSeparator()))
-                ->addJoins($this->autoQbAlias, $this->getEntityName(), with: $options->getWith()[$this->autoQbAlias] ?? [], log: $log);
+                ->addJoins($this->autoQbAlias, $this->getEntityName(), with: $options->getWith()[$this->autoQbAlias] ?? [], log: $log, without: $options->getWithout()[$this->autoQbAlias] ?? []);
         } catch(UnknownRelation $e) {
             $log['error'][] = $e->getMessage();
         }

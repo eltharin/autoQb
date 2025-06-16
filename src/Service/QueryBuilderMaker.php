@@ -13,7 +13,7 @@ class QueryBuilderMaker
     {
     }
 
-    public function addJoins(string $alias, string $entityName, $from = [], $count = 0, ?array $with = [], ?array &$log = null): void
+    public function addJoins(string $alias, string $entityName, array $from = [], int $count = 0, ?array $with = [], ?array &$log = null, ?array $without = []): void
     {
         $log['relations'] = [];
         $log['alias'] = $alias;
@@ -29,7 +29,7 @@ class QueryBuilderMaker
                 'attributes' => [],
                 'subJoins' => [],
             ];
-            $propertyAttribute = self::getPropertyAttribute($assoc['sourceEntity'], $assoc['fieldName'], $alias, $with ?? [], $logAssoc['attributes']);
+            $propertyAttribute = self::getPropertyAttribute($assoc['sourceEntity'], $assoc['fieldName'], $alias, $with ?? [], $logAssoc['attributes'], $without ?? []);
 
             if($propertyAttribute !== null)
             {
@@ -53,7 +53,7 @@ class QueryBuilderMaker
                 $from[] = $relAlias;
 
                 try{
-                    $this->addJoins($subAlias, $assoc['targetEntity'], $from, $count+1, $with[$relAlias]??[], $logAssoc);
+                    $this->addJoins($subAlias, $assoc['targetEntity'], $from, $count+1, $with[$relAlias]??[], $logAssoc, $without[$relAlias]??[]);
                 } catch(UnknownRelation $e) {
                     $log['error'][] = $e->getMessage();
                 }
@@ -68,6 +68,7 @@ class QueryBuilderMaker
                 }
 
                 unset($with[$relAlias]);
+                unset($without[$relAlias]);
             }
             $log['relations'][] = $logAssoc;
         }
@@ -77,10 +78,16 @@ class QueryBuilderMaker
             throw new UnknownRelation(implode(', ', array_map(fn($a) => $alias . '.' . $a, array_keys($with))) . ' not exists.');
         }
 
+        if(!empty($without))
+        {
+            throw new UnknownRelation(implode(', ', array_map(fn($a) => $alias . '.' . $a, array_keys($without))) . ' not exists.');
+        }
+
     }
 
-	protected function getPropertyAttribute(string $name, string $property, string $classAlias, array $with, array &$log) : ?AutoQbField
+	protected function getPropertyAttribute(string $name, string $property, string $classAlias, array $with, array &$log, array $without) : ?AutoQbField
 	{
+//        dump($with, $without);
         foreach($this->entityManager->getClassMetadata($name)
                     ->getReflectionClass()
                     ->getProperty($property)
@@ -102,6 +109,12 @@ class QueryBuilderMaker
             //cas1 : l'alias de la relation est demandée
             if($attr->getRelationAlias() != '')
             {
+                if(array_key_exists($attr->getRelationAlias(), $without))
+                {
+                    $log[$key]['result'] = false;
+                    $log[$key]['reason'] = 'alias "' . $attr->getRelationAlias() . '" is refused.';
+                    return null;
+                }
                 if(array_key_exists($attr->getRelationAlias(), $with))
                 {
                     $log[$key]['result'] = true;
@@ -113,7 +126,13 @@ class QueryBuilderMaker
                 continue;
             }
 
-            //cas2: la relation est demandée
+            //cas2: la relation est demandée ou refusée
+            if(array_key_exists($property, $without))
+            {
+                $log[$key]['result'] = false;
+                $log[$key]['reason'] = 'property "' . $property . '" is refused.';
+                return null;
+            }
             if(array_key_exists($property, $with))
             {
                 $log[$key]['result'] = true;
@@ -134,6 +153,15 @@ class QueryBuilderMaker
             $log[$key]['reason'] = 'attr is not ask.';
         }
 
+        if(array_key_exists($property, $without))
+        {
+            $log[] = [
+                'result' => false,
+                'reason' => 'property "' . $property . '" is refused without attribute.',
+            ];
+
+            return null;
+        }
         if(array_key_exists($property, $with))
         {
             $log[] = [
