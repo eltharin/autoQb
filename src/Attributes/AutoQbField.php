@@ -30,10 +30,7 @@ class AutoQbField implements MappingAttribute
 
 	)
     {
-        if(!is_array($whenAlias))
-        {
-            $this->whenAlias = $whenAlias ? [$whenAlias] : [];
-        }
+        $this->whenAlias = is_array($whenAlias) ? $whenAlias : ( $whenAlias ? [$whenAlias] : []);
     }
 
     public function getWhenAlias(): array|string|null
